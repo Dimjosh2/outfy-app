@@ -1,17 +1,25 @@
 
 import Navigation from "@/components/Navigation";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Shirt, Search, Filter } from "lucide-react";
+import { Plus, Shirt, Search, Filter, Palette } from "lucide-react";
 
 const Wardrobe = () => {
   const categories = [
     { name: "Tops", count: 24, icon: "👕" },
     { name: "Bottoms", count: 18, icon: "👖" },
     { name: "Dresses", count: 12, icon: "👗" },
+    { name: "Suits", count: 6, icon: "🤵" },
     { name: "Outerwear", count: 8, icon: "🧥" },
     { name: "Shoes", count: 15, icon: "👠" },
     { name: "Accessories", count: 32, icon: "👜" },
+  ];
+
+  const colorCombinations = [
+    { name: "Classic Monochrome", colors: ["#000000", "#FFFFFF", "#808080"], popularity: "95%" },
+    { name: "Navy & Cream", colors: ["#1B263B", "#F8F4E6", "#A8DADC"], popularity: "87%" },
+    { name: "Earth Tones", colors: ["#8B4513", "#D2B48C", "#228B22"], popularity: "82%" },
+    { name: "Pastel Dreams", colors: ["#FFB6C1", "#E6E6FA", "#F0F8FF"], popularity: "78%" },
   ];
 
   return (
@@ -44,6 +52,33 @@ const Wardrobe = () => {
               <Filter className="w-4 h-4" />
               <span>Filters</span>
             </Button>
+          </div>
+
+          {/* Color Combinations Section */}
+          <div className="mb-8">
+            <div className="flex items-center space-x-2 mb-4">
+              <Palette className="w-5 h-5 text-outfy-teal" />
+              <h2 className="text-xl font-semibold text-gray-900">Popular Color Combinations</h2>
+            </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {colorCombinations.map((combo, index) => (
+                <Card key={index} className="hover:shadow-md transition-shadow cursor-pointer group">
+                  <CardContent className="p-4">
+                    <div className="flex space-x-2 mb-3">
+                      {combo.colors.map((color, colorIndex) => (
+                        <div
+                          key={colorIndex}
+                          className="w-8 h-8 rounded-full border-2 border-gray-200"
+                          style={{ backgroundColor: color }}
+                        ></div>
+                      ))}
+                    </div>
+                    <h3 className="font-medium text-gray-900 text-sm mb-1">{combo.name}</h3>
+                    <p className="text-xs text-gray-500">{combo.popularity} match rate</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </div>
 
           {/* Categories Grid */}

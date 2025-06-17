@@ -2,7 +2,7 @@
 import Navigation from "@/components/Navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Cloud, Calendar, TrendingUp } from "lucide-react";
+import { Sparkles, Cloud, Calendar, TrendingUp, Heart } from "lucide-react";
 
 const Dashboard = () => {
   return (
@@ -26,15 +26,42 @@ const Dashboard = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="bg-gradient-to-br from-outfy-teal/10 to-emerald-100 rounded-xl p-8 text-center">
-                    <div className="w-24 h-24 bg-white rounded-full mx-auto mb-4 flex items-center justify-center">
-                      <span className="text-2xl">👗</span>
-                    </div>
-                    <h3 className="text-xl font-semibold mb-2">Casual Chic Look</h3>
-                    <p className="text-gray-600 mb-4">Perfect for today's weather: 22°C and partly cloudy</p>
-                    <div className="flex gap-2 justify-center">
-                      <Button size="sm" className="bg-outfy-coral text-white">Love it! 💕</Button>
-                      <Button size="sm" variant="outline">Show alternatives</Button>
+                  <div className="bg-gradient-to-br from-outfy-teal/10 to-emerald-100 rounded-xl p-8">
+                    <div className="flex flex-col md:flex-row items-center space-y-6 md:space-y-0 md:space-x-8">
+                      {/* Outfit Image */}
+                      <div className="flex-shrink-0">
+                        <div className="w-48 h-64 bg-white rounded-lg shadow-md overflow-hidden">
+                          <img 
+                            src="https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=300&h=400&fit=crop&crop=center"
+                            alt="Today's outfit suggestion"
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      </div>
+                      
+                      {/* Outfit Details */}
+                      <div className="text-center md:text-left flex-1">
+                        <h3 className="text-xl font-semibold mb-2">Casual Chic Look</h3>
+                        <p className="text-gray-600 mb-4">Perfect for today's weather: 22°C and partly cloudy</p>
+                        
+                        {/* Outfit Items */}
+                        <div className="mb-6">
+                          <div className="flex flex-wrap gap-2 justify-center md:justify-start">
+                            <span className="px-3 py-1 bg-white/70 rounded-full text-sm">Cream Blouse</span>
+                            <span className="px-3 py-1 bg-white/70 rounded-full text-sm">Dark Jeans</span>
+                            <span className="px-3 py-1 bg-white/70 rounded-full text-sm">Brown Boots</span>
+                            <span className="px-3 py-1 bg-white/70 rounded-full text-sm">Gold Necklace</span>
+                          </div>
+                        </div>
+                        
+                        <div className="flex gap-2 justify-center md:justify-start">
+                          <Button size="sm" className="bg-outfy-coral text-white">
+                            <Heart className="w-4 h-4 mr-1" />
+                            Love it!
+                          </Button>
+                          <Button size="sm" variant="outline">Show alternatives</Button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </CardContent>
