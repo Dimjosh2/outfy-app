@@ -3,6 +3,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Mic, Send, User, Bot, MicOff } from "lucide-react";
+import { useAuth } from '@/contexts/AuthContext';
+import { useSubscription } from '@/hooks/useSubscription';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from "@/hooks/use-toast";
 
 interface Message {
   id: string;
@@ -12,6 +16,9 @@ interface Message {
 }
 
 const AIChat = () => {
+  const { user } = useAuth();
+  const { canPerformAction, usage, tierInfo } = useSubscription();
+  const { toast } = useToast();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -24,41 +31,29 @@ const AIChat = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [isListening, setIsListening] = useState(false);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recognitionRef = useRef<any>(null);
 
   const quickReplies = ['Work Outfit', 'Casual Look', 'Date Night', 'Weather-based', 'Color Matching'];
 
-  // AI response logic - simulating intelligent responses
-  const getAIResponse = (userMessage: string): string => {
-    const message = userMessage.toLowerCase();
-    
-    if (message.includes('work') || message.includes('office') || message.includes('professional')) {
-      return "For a professional work look, I'd recommend a tailored blazer with dress pants or a midi skirt. Navy, black, or gray are great base colors. Add a crisp white or light blue shirt, and finish with closed-toe shoes. This creates a polished, confident appearance perfect for the workplace!";
-    }
-    
-    if (message.includes('casual') || message.includes('weekend') || message.includes('relaxed')) {
-      return "For a casual yet stylish look, try well-fitted jeans with a comfortable sweater or a nice t-shirt. Layer with a denim jacket or cardigan. Sneakers or ankle boots work great. Don't forget accessories like a crossbody bag or simple jewelry to elevate the look!";
-    }
-    
-    if (message.includes('date') || message.includes('dinner') || message.includes('romantic')) {
-      return "For a date night, consider a midi dress in a flattering silhouette, or a nice blouse with dark jeans. Add heels or dressy flats, and a light jacket or blazer. Choose colors that make you feel confident - deep jewel tones or classic black work beautifully!";
-    }
-    
-    if (message.includes('color') || message.includes('match') || message.includes('combination')) {
-      return "Great question about color! Here are some timeless combinations: Navy + white + gold accents, Black + cream + silver, Burgundy + gray + rose gold, or Olive + cream + brown. For a pop of color, try coral with navy, or mustard with denim blue!";
-    }
-    
-    if (message.includes('weather') || message.includes('rain') || message.includes('cold') || message.includes('hot')) {
-      return "Weather-appropriate styling is key! For rainy days: waterproof shoes, layers you can remove, and a stylish trench coat. For cold weather: warm knits, boots, and a statement coat. For hot days: breathable fabrics like cotton or linen, light colors, and comfortable sandals!";
-    }
-    
-    // Default response
-    return `I'd love to help you with that! Based on your question about "${userMessage}", I recommend focusing on pieces that make you feel confident and comfortable. Consider your lifestyle, the occasion, and colors that complement your skin tone. Would you like me to suggest specific outfit combinations or color palettes?`;
-  };
-
-  const handleSendMessage = (text: string) => {
+  const handleSendMessage = async (text: string) => {
     if (!text.trim()) return;
+    if (!user) {
+      toast({
+        title: "Please sign in",
+        description: "You need to be signed in to use the AI chat",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!canPerformAction('aiChatsToday')) {
+      toast({
+        title: "Daily Limit Reached",
+        description: `You can only send ${tierInfo.limits.aiChatsPerDay} messages per day on the ${tierInfo.name} plan. Upgrade for unlimited messages!`,
+        variant: "destructive",
+      });
+      return;
+    }
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -71,17 +66,30 @@ const AIChat = () => {
     setInputText('');
     setIsTyping(true);
 
-    // Simulate AI thinking time
-    setTimeout(() => {
+    try {
+      const { data, error } = await supabase.functions.invoke('ai-chat', {
+        body: { message: text }
+      });
+
+      if (error) throw error;
+
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
-        text: getAIResponse(text),
+        text: data.response,
         isUser: false,
         timestamp: new Date()
       };
       setMessages(prev => [...prev, aiResponse]);
+    } catch (error) {
+      console.error('Error calling AI chat:', error);
+      toast({
+        title: "Error",
+        description: "Failed to get AI response. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
       setIsTyping(false);
-    }, 1500 + Math.random() * 1000); // Random delay between 1.5-2.5 seconds
+    }
   };
 
   // Voice recognition setup
@@ -118,8 +126,11 @@ const AIChat = () => {
     if (recognitionRef.current) {
       recognitionRef.current.start();
     } else {
-      // Fallback for browsers without speech recognition
-      alert('Voice recognition not supported in this browser. Try Chrome or Edge!');
+      toast({
+        title: "Not Supported",
+        description: "Voice recognition not supported in this browser. Try Chrome or Edge!",
+        variant: "destructive",
+      });
     }
   };
 
@@ -134,11 +145,16 @@ const AIChat = () => {
     <Card className="w-full max-w-2xl mx-auto h-96 flex flex-col shadow-lg">
       {/* Chat Header */}
       <div className="p-4 border-b bg-gradient-to-r from-outfy-teal to-emerald-600 text-white rounded-t-lg">
-        <h3 className="font-semibold flex items-center space-x-2">
-          <Bot className="w-5 h-5" />
-          <span>AI Style Assistant</span>
-          {isTyping && <span className="text-sm opacity-75">(typing...)</span>}
-        </h3>
+        <div className="flex justify-between items-center">
+          <h3 className="font-semibold flex items-center space-x-2">
+            <Bot className="w-5 h-5" />
+            <span>AI Style Assistant</span>
+            {isTyping && <span className="text-sm opacity-75">(typing...)</span>}
+          </h3>
+          <div className="text-xs">
+            {tierInfo.limits.aiChatsPerDay === -1 ? '∞' : `${usage.aiChatsToday}/${tierInfo.limits.aiChatsPerDay}`} today
+          </div>
+        </div>
       </div>
 
       {/* Messages */}
@@ -188,6 +204,7 @@ const AIChat = () => {
               variant="outline"
               onClick={() => handleSendMessage(reply)}
               className="text-xs hover:bg-outfy-teal hover:text-white transition-colors"
+              disabled={!canPerformAction('aiChatsToday')}
             >
               {reply}
             </Button>
@@ -205,7 +222,7 @@ const AIChat = () => {
             onKeyPress={(e) => e.key === 'Enter' && handleSendMessage(inputText)}
             placeholder={isListening ? "Listening..." : "Ask about outfits, style tips, or trends..."}
             className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-outfy-teal text-sm"
-            disabled={isListening}
+            disabled={isListening || !canPerformAction('aiChatsToday')}
           />
           <Button
             onClick={isListening ? stopVoiceRecognition : startVoiceRecognition}
@@ -215,6 +232,7 @@ const AIChat = () => {
                 : 'bg-outfy-teal hover:bg-outfy-teal/90'
             } text-white`}
             size="sm"
+            disabled={!canPerformAction('aiChatsToday')}
           >
             {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
           </Button>
@@ -222,13 +240,18 @@ const AIChat = () => {
             onClick={() => handleSendMessage(inputText)}
             className="bg-outfy-coral hover:bg-outfy-coral/90 text-white"
             size="sm"
-            disabled={!inputText.trim() || isTyping}
+            disabled={!inputText.trim() || isTyping || !canPerformAction('aiChatsToday')}
           >
             <Send className="w-4 h-4" />
           </Button>
         </div>
         {isListening && (
           <p className="text-xs text-outfy-teal mt-2 text-center">Listening... Speak now!</p>
+        )}
+        {!canPerformAction('aiChatsToday') && (
+          <p className="text-xs text-red-500 mt-2 text-center">
+            Daily limit reached. Upgrade for unlimited messages!
+          </p>
         )}
       </div>
     </Card>

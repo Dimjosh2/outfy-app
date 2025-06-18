@@ -3,8 +3,60 @@ import Navigation from "@/components/Navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Heart, Share2, Bookmark, TrendingUp, Sparkles, ShoppingBag, Users } from "lucide-react";
+import { useAuth } from '@/contexts/AuthContext';
+import { useSubscription } from '@/hooks/useSubscription';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from "@/hooks/use-toast";
+import StoreIntegration from '@/components/StoreIntegration';
 
 const StyleFeed = () => {
+  const { user } = useAuth();
+  const { canPerformAction, tierInfo } = useSubscription();
+  const { toast } = useToast();
+
+  const handleSaveLook = async (lookData: any) => {
+    if (!user) {
+      toast({
+        title: "Please sign in",
+        description: "You need to be signed in to save looks",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!canPerformAction('savedLooks')) {
+      toast({
+        title: "Limit Reached",
+        description: `You can only save ${tierInfo.limits.savedLooks} looks on the ${tierInfo.name} plan. Upgrade for more!`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('saved_looks')
+        .insert({
+          user_id: user.id,
+          look_data: lookData,
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Look Saved!",
+        description: "Added to your saved looks collection",
+      });
+    } catch (error) {
+      console.error('Error saving look:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save look",
+        variant: "destructive",
+      });
+    }
+  };
+
   const trendingLooks = [
     {
       id: 1,
@@ -67,6 +119,15 @@ const StyleFeed = () => {
           <div className="grid lg:grid-cols-4 gap-8">
             {/* Main Feed */}
             <div className="lg:col-span-3">
+              {/* Store Integration */}
+              <div className="mb-8">
+                <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center space-x-2">
+                  <ShoppingBag className="w-5 h-5 text-outfy-coral" />
+                  <span>Shop the Look</span>
+                </h2>
+                <StoreIntegration />
+              </div>
+
               {/* Trending Section */}
               <div className="mb-8">
                 <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center space-x-2">
@@ -103,7 +164,12 @@ const StyleFeed = () => {
                             </Button>
                           </div>
                           <div className="flex space-x-1">
-                            <Button size="sm" variant="outline">
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => handleSaveLook(look)}
+                              disabled={!canPerformAction('savedLooks')}
+                            >
                               <Bookmark className="w-3 h-3 mr-1" />
                               Save
                             </Button>

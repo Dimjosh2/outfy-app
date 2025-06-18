@@ -2,18 +2,109 @@
 import Navigation from "@/components/Navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Cloud, Calendar, TrendingUp, Heart } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Sparkles, Cloud, Calendar, TrendingUp, Heart, Crown } from "lucide-react";
+import { useAuth } from '@/contexts/AuthContext';
+import { useSubscription } from '@/hooks/useSubscription';
+import SubscriptionGate from '@/components/SubscriptionGate';
+import { useState } from 'react';
 
 const Dashboard = () => {
+  const { user } = useAuth();
+  const { currentTier, tierInfo, usage } = useSubscription();
+  const [showSubscriptions, setShowSubscriptions] = useState(false);
+
+  const handleUpgrade = (tier: string) => {
+    console.log(`Upgrading to ${tier}`);
+    // Here you would integrate with Stripe or payment provider
+  };
+
+  if (showSubscriptions) {
+    return (
+      <div className="min-h-screen bg-outfy-light">
+        <Navigation />
+        <main className="pt-24 pb-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">Choose Your Plan</h1>
+              <p className="text-gray-600">Unlock the full potential of your style journey</p>
+            </div>
+            <SubscriptionGate currentTier={currentTier} onUpgrade={handleUpgrade} />
+            <div className="text-center mt-8">
+              <Button variant="outline" onClick={() => setShowSubscriptions(false)}>
+                Back to Dashboard
+              </Button>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-outfy-light">
       <Navigation />
       <main className="pt-24 pb-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Good morning, Sarah! ✨</h1>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              Good morning, {user?.user_metadata?.full_name || 'Fashionista'}! ✨
+            </h1>
             <p className="text-gray-600">Here's your personalized style assistant ready to help</p>
           </div>
+
+          {/* Subscription Status */}
+          <Card className="mb-6 border-l-4 border-l-outfy-teal">
+            <CardHeader>
+              <div className="flex justify-between items-center">
+                <div className="flex items-center space-x-2">
+                  <Crown className="w-5 h-5 text-outfy-teal" />
+                  <CardTitle>Current Plan: {tierInfo.name}</CardTitle>
+                  <Badge variant={currentTier === 'free' ? 'secondary' : 'default'}>
+                    {currentTier === 'free' ? 'Free' : `£${tierInfo.price}/month`}
+                  </Badge>
+                </div>
+                <Button 
+                  onClick={() => setShowSubscriptions(true)}
+                  className="bg-outfy-coral hover:bg-outfy-coral/90"
+                >
+                  {currentTier === 'free' ? 'Upgrade Now' : 'Manage Plan'}
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid md:grid-cols-4 gap-4">
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-outfy-teal">
+                    {tierInfo.limits.wardrobeItems === -1 ? '∞' : usage.wardrobeItems}
+                    {tierInfo.limits.wardrobeItems !== -1 && `/${tierInfo.limits.wardrobeItems}`}
+                  </p>
+                  <p className="text-sm text-gray-600">Wardrobe Items</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-outfy-teal">
+                    {tierInfo.limits.outfitPlans === -1 ? '∞' : usage.outfitPlans}
+                    {tierInfo.limits.outfitPlans !== -1 && `/${tierInfo.limits.outfitPlans}`}
+                  </p>
+                  <p className="text-sm text-gray-600">Outfit Plans</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-outfy-teal">
+                    {tierInfo.limits.aiChatsPerDay === -1 ? '∞' : usage.aiChatsToday}
+                    {tierInfo.limits.aiChatsPerDay !== -1 && `/${tierInfo.limits.aiChatsPerDay}`}
+                  </p>
+                  <p className="text-sm text-gray-600">AI Chats Today</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-outfy-teal">
+                    {tierInfo.limits.savedLooks === -1 ? '∞' : usage.savedLooks}
+                    {tierInfo.limits.savedLooks !== -1 && `/${tierInfo.limits.savedLooks}`}
+                  </p>
+                  <p className="text-sm text-gray-600">Saved Looks</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Today's Outfit */}
@@ -68,7 +159,7 @@ const Dashboard = () => {
               </Card>
             </div>
 
-            {/* Quick Actions */}
+            {/* Sidebar */}
             <div className="space-y-6">
               <Card>
                 <CardHeader>
