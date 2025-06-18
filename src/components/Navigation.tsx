@@ -1,12 +1,21 @@
 
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from "@/components/ui/button";
-import { Menu, X, Sparkles } from "lucide-react";
+import { Menu, X, Sparkles, User, LogOut } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Navigation = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const { user, signOut } = useAuth();
 
   const navItems = [
     { name: 'Home', path: '/' },
@@ -22,6 +31,10 @@ const Navigation = () => {
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
   };
 
   return (
@@ -55,18 +68,41 @@ const Navigation = () => {
             ))}
           </div>
 
-          {/* Desktop Auth Buttons */}
+          {/* Desktop Auth Section */}
           <div className="hidden md:flex items-center space-x-3">
-            <Link to="/login">
-              <Button variant="outline" size="sm" className="border-outfy-teal text-outfy-teal hover:bg-outfy-teal hover:text-white">
-                Sign In
-              </Button>
-            </Link>
-            <Link to="/signup">
-              <Button size="sm" className="bg-outfy-coral hover:bg-outfy-coral/90 text-white">
-                Get Started
-              </Button>
-            </Link>
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="border-outfy-teal text-outfy-teal hover:bg-outfy-teal hover:text-white">
+                    <User className="w-4 h-4 mr-2" />
+                    Account
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem asChild>
+                    <Link to="/settings">Settings</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut}>
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <>
+                <Link to="/login">
+                  <Button variant="outline" size="sm" className="border-outfy-teal text-outfy-teal hover:bg-outfy-teal hover:text-white">
+                    Sign In
+                  </Button>
+                </Link>
+                <Link to="/signup">
+                  <Button size="sm" className="bg-outfy-coral hover:bg-outfy-coral/90 text-white">
+                    Get Started
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -101,24 +137,51 @@ const Navigation = () => {
                 </Link>
               ))}
               <div className="pt-4 border-t border-gray-200 space-y-2">
-                <Link
-                  to="/login"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="block w-full"
-                >
-                  <Button variant="outline" size="sm" className="w-full border-outfy-teal text-outfy-teal hover:bg-outfy-teal hover:text-white">
-                    Sign In
-                  </Button>
-                </Link>
-                <Link
-                  to="/signup"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="block w-full"
-                >
-                  <Button size="sm" className="w-full bg-outfy-coral hover:bg-outfy-coral/90 text-white">
-                    Get Started
-                  </Button>
-                </Link>
+                {user ? (
+                  <>
+                    <Link
+                      to="/settings"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="block w-full"
+                    >
+                      <Button variant="outline" size="sm" className="w-full border-outfy-teal text-outfy-teal hover:bg-outfy-teal hover:text-white">
+                        Settings
+                      </Button>
+                    </Link>
+                    <Button 
+                      onClick={() => {
+                        handleSignOut();
+                        setIsMobileMenuOpen(false);
+                      }}
+                      variant="outline" 
+                      size="sm" 
+                      className="w-full border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
+                    >
+                      Sign Out
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      to="/login"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="block w-full"
+                    >
+                      <Button variant="outline" size="sm" className="w-full border-outfy-teal text-outfy-teal hover:bg-outfy-teal hover:text-white">
+                        Sign In
+                      </Button>
+                    </Link>
+                    <Link
+                      to="/signup"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="block w-full"
+                    >
+                      <Button size="sm" className="w-full bg-outfy-coral hover:bg-outfy-coral/90 text-white">
+                        Get Started
+                      </Button>
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </div>
