@@ -67,7 +67,7 @@ const AIChat = () => {
     setIsTyping(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke('ai-chat', {
+      const { data, error } = await supabase.functions.invoke('grok-ai-chat', {
         body: { message: text }
       });
 

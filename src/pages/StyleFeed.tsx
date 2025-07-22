@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/hooks/useSubscription';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
-import StoreIntegration from '@/components/StoreIntegration';
+import RealStoreIntegration from '@/components/RealStoreIntegration';
 
 const StyleFeed = () => {
   const { user } = useAuth();
@@ -125,7 +125,7 @@ const StyleFeed = () => {
                   <ShoppingBag className="w-5 h-5 text-outfy-coral" />
                   <span>Shop the Look</span>
                 </h2>
-                <StoreIntegration />
+                <RealStoreIntegration />
               </div>
 
               {/* Trending Section */}
